@@ -1,0 +1,14 @@
+{
+	"services": {
+		"silex.sequelize.service": {
+			"class": "Silex.SequelizeBundle.Services.Sequelize",
+			"arguments": [
+				{ "type": "service", "id": "kernel.container" }
+			],
+			"events": [
+				{ "listener": "kernel.ready", "method": "onKernelReady", "priority": -15 }
+			],
+			"priority": 10
+		}
+	}
+}

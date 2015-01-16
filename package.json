@@ -1,0 +1,31 @@
+{
+	"name": "silex-bundle-sequelize",
+	"version": "0.0.1",
+	"description": "[SILEX][BUNDLE] Adds an ORM",
+	"author": "Valentin Allaire <valentin@sitexw.fr>",
+	"license": "MIT",
+	"keywords": [
+		"sequelize",
+		"orm",
+		"silex",
+		"bundle"
+	],
+	"dependencies": {
+		"sequelize": "2.0.x || 2.0.0-rc7",
+		"mysql": "2.x"
+	},
+	"devDependencies": {},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/silexjs/bundle-sequelize.git"
+	},
+	"bugs": {
+		"url": "https://github.com/silexjs/bundle-sequelize/issues"
+	},
+	"homepage": "https://github.com/silexjs/bundle-sequelize",
+	"autoload": {
+		"psr-4": {
+			"Silex\\SequelizeBundle": "./"
+		}
+	}
+}
