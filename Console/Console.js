@@ -51,7 +51,7 @@ Console.prototype = {
 	
 	commandDbToModels: function(dir, options) {
 		var self = this;
-		var space = (option.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
+		var space = (options.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
 		if(dir === undefined) {
