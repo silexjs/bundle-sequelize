@@ -23,7 +23,7 @@ Console.prototype = {
 			.command('sequelize:db:toModels [dir]')
 			.description('Create the models files from the database')
 			.option('-f, --force', 'Allows you to force the creation of template files if the folder is not empty')
-			.option('-i, --indentation', 'Allows you to choose the type of recess (default: \t)')
+			.option('-i, --indentation <value>', 'Allows you to choose the type of indentation (t=TABULATION and s=SPACE. Default: t)')
 			.action(function() {
 				self.commandDbToModels.apply(self, arguments);
 			});
@@ -51,7 +51,7 @@ Console.prototype = {
 	
 	commandDbToModels: function(dir, options) {
 		var self = this;
-		var space = options.indentation || "\t";
+		var space = (option.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
 		if(dir === undefined) {
