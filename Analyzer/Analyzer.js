@@ -52,13 +52,23 @@ Analyzer.prototype = {
 	},
 	
 	getTables: function(cb) {
-		this.sequelize.query('SHOW TABLES').then(function(result) {
-			cb(result);
+		this.sequelize.query('SHOW TABLES').then(function(results) {
+			for(var i in results) {
+				for(var key in results[i]) {
+					break;
+				}
+				break;
+			}
+			var resultsFiltered = [];
+			for(var i in results) {
+				resultsFiltered.push(results[i][key]);
+			}
+			cb(resultsFiltered);
 		});
 	},
 	getFields: function(table, cb) {
-		this.sequelize.query('SHOW FULL COLUMNS FROM '+table).then(function(result) {
-			cb(result);
+		this.sequelize.query('SHOW FULL COLUMNS FROM '+table).then(function(results) {
+			cb(results);
 		});
 	},
 	setAssociations: function(db, cb) {
