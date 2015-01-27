@@ -53,17 +53,21 @@ Analyzer.prototype = {
 	
 	getTables: function(cb) {
 		this.sequelize.query('SHOW TABLES').then(function(results) {
-			for(var i in results) {
-				for(var key in results[i]) {
+			if(results[0] !== undefined && typeof results[0] === 'object') {
+				for(var i in results) {
+					for(var key in results[i]) {
+						break;
+					}
 					break;
 				}
-				break;
+				var resultsFiltered = [];
+				for(var i in results) {
+					resultsFiltered.push(results[i][key]);
+				}
+				cb(resultsFiltered);
+			} else {
+				cb(results);
 			}
-			var resultsFiltered = [];
-			for(var i in results) {
-				resultsFiltered.push(results[i][key]);
-			}
-			cb(resultsFiltered);
 		});
 	},
 	getFields: function(table, cb) {
