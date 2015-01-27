@@ -1,5 +1,6 @@
 var pa = require('path');
 var fs = require('fs');
+var inflection = require('inflection');
 
 var Analyzer = USE('Silex.SequelizeBundle.Analyzer.Analyzer');
 
@@ -54,6 +55,7 @@ Console.prototype = {
 		var space = (options.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
+		var pluralize = this.sequelize.Utils.pluralize;
 		if(dir === undefined) {
 			var dirModels = self.container.get('kernel').rootDir+'/app/models';
 		} else {
@@ -121,7 +123,7 @@ Console.prototype = {
 					}
 					
 					model += space+"}, {"+lineBreak;
-					model += space+space+"name: { singular: '"+self.fieldToCamelcase(tableName)+"' },"+lineBreak;
+					model += space+space+"name: { singular: '"+self.fieldToCamelcase(tableName)+"', plural: '"+pluralize(self.fieldToCamelcase(tableName))+"' },"+lineBreak;
 					model += space+space+"tableName: '"+tableName+"',"+lineBreak;
 					model += space+space+"freezeTableName: "+freezeTableName+","+lineBreak;
 					
