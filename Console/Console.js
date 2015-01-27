@@ -1,6 +1,5 @@
 var pa = require('path');
 var fs = require('fs');
-var inflection = require('inflection');
 
 var Analyzer = USE('Silex.SequelizeBundle.Analyzer.Analyzer');
 
