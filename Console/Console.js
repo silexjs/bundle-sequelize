@@ -54,7 +54,6 @@ Console.prototype = {
 		var space = (options.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
-		var pluralize = this.sequelize.Utils.pluralize;
 		if(dir === undefined) {
 			var dirModels = self.container.get('kernel').rootDir+'/app/models';
 		} else {
@@ -69,6 +68,7 @@ Console.prototype = {
 			return;
 		}
 		this.lanchSequelize(function() {
+			var pluralize = self.sequelize.Utils.pluralize;
 			console.log('Analyzing of the database...');
 			var analyzer = new Analyzer(self.sequelize);
 			analyzer.getInfo(function(tables) {
