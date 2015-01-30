@@ -55,7 +55,7 @@ Console.prototype = {
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
 		if(dir === undefined) {
-			var dirModels = self.container.get('kernel').rootDir+'/app/models';
+			var dirModels = self.container.get('kernel').dir.app+'/models';
 		} else {
 			var dirModels = pa.resolve(dir);
 		}
@@ -182,7 +182,7 @@ Console.prototype = {
 	commandDbMigrate: function(dir, options, method) {
 		var self = this;
 		if(dir === undefined) {
-			dir = this.container.get('kernel').rootDir+'/app/migrations';
+			dir = this.container.get('kernel').dir.app+'/migrations';
 		} else {
 			var dir = pa.resolve(dir);
 		}

@@ -82,7 +82,7 @@ SequelizeService.prototype = {
 	},
 	
 	loadModels: function() {
-		var dir = this.kernel.rootDir+'/app/models';
+		var dir = this.kernel.dir.app+'/models';
 		if(fs.existsSync(dir) === true) {
 			var modelsFile = glob.sync(dir+'/*.js');
 			var modelsFileLength = modelsFile.length;
