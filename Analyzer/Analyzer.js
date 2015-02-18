@@ -53,26 +53,20 @@ Analyzer.prototype = {
 	
 	getTables: function(cb) {
 		this.sequelize.query('SHOW TABLES').then(function(results) {
-			if(results[0] !== undefined && typeof results[0] === 'object') {
-				for(var i in results) {
-					for(var key in results[i]) {
-						break;
-					}
-					break;
+			var resultsFiltered = [];
+			var key = null;
+			for(var i in results[0]) {
+				if(key === null) {
+					key = Object.keys(results[0][i])[0];
 				}
-				var resultsFiltered = [];
-				for(var i in results) {
-					resultsFiltered.push(results[i][key]);
-				}
-				cb(resultsFiltered);
-			} else {
-				cb(results);
+				resultsFiltered.push(results[0][i][key]);
 			}
+			cb(resultsFiltered);
 		});
 	},
 	getFields: function(table, cb) {
 		this.sequelize.query('SHOW FULL COLUMNS FROM '+table).then(function(results) {
-			cb(results);
+			cb(results[0]);
 		});
 	},
 	setAssociations: function(db, cb) {
@@ -92,6 +86,7 @@ Analyzer.prototype = {
 				query += 'AND REFERENCED_TABLE_SCHEMA = \''+self.dbName+'\' ';
 				query += 'AND REFERENCED_TABLE_NAME = \''+tableName+'\' ';
 			self.sequelize.query(query).then(function(associations) {
+				associations = associations[0];
 				tablesNow++;
 				if(tableName.match(/^(.*)(_has_)(.*)$/i) !== null) {
 					return;
