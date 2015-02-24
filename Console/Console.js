@@ -1,5 +1,6 @@
 var pa = require('path');
 var fs = require('fs');
+var mkdirp = require('mkdirp');
 
 var Analyzer = USE('Silex.SequelizeBundle.Analyzer.Analyzer');
 
@@ -20,24 +21,24 @@ Console.prototype = {
 	registerCmd: function() {
 		var self = this;
 		this.cmd
-			.command('sequelize:db:toModels [dir]')
+			.command('sequelize:generate:models [dir]')
 			.description('Create the models files from the database')
 			.option('-f, --force', 'Allows you to force the creation of template files if the folder is not empty')
 			.option('-i, --indentation <value>', 'Allows you to choose the type of indentation (t=TABULATION and s=SPACE. Default: t)')
 			.action(function() {
-				self.commandDbToModels.apply(self, arguments);
+				self.commandGenerateModels.apply(self, arguments);
 			});
 		this.cmd
-			.command('sequelize:db:migrate [dir]')
+			.command('sequelize:migrate [dir]')
 			.description('Runs migration files')
 			.action(function(dir, options) {
-				self.commandDbMigrate.call(self, dir, options, 'up');
+				self.commandMigrate.call(self, dir, options, 'up');
 			});
 		this.cmd
-			.command('sequelize:db:migrate:undo [dir]')
+			.command('sequelize:migrate:undo [dir]')
 			.description('Revert the last migration run')
 			.action(function() {
-				self.commandDbMigrate.call(self, dir, options, 'down');
+				self.commandMigrate.call(self, dir, options, 'down');
 			});
 	},
 	
@@ -49,18 +50,18 @@ Console.prototype = {
 		});
 	},
 	
-	commandDbToModels: function(dir, options) {
+	commandGenerateModels: function(dir, options) {
 		var self = this;
 		var space = (options.indentation || 't').replace(/t/ig, '\t').replace(/s/ig, ' ');
 		var lineBreak = options.lineBreak || "\n";
 		var freezeTableName = (options.freezeTableName===undefined?true:options.freezeTableName);
 		if(dir === undefined) {
-			var dirModels = self.container.get('kernel').dir.app+'/models';
+			var dirModels = self.container.get('kernel').dir.app+'/orm/models';
 		} else {
 			var dirModels = pa.resolve(dir);
 		}
 		if(fs.existsSync(dirModels) === false) {
-			fs.mkdirSync(dirModels);
+			mkdirp.sync(dirModels);
 		} else if(fs.readdirSync(dirModels).length > 0 && options.force === undefined) {
 			console.log('The dir contains templates, use the "--force" parameter to perform the operation.');
 			console.log('(dir: '+dirModels+')');
@@ -147,6 +148,10 @@ Console.prototype = {
 						var as = table.associations.hasMany[i];
 						model += space+space+space+space+"models."+self.tableToCamelcase(tableName)+".hasMany(models."+self.tableToCamelcase(as.foreignTable)+", { foreignKey: '"+self.fieldToCamelcase(as.foreignKey)+"' });"+lineBreak;
 					}
+					for(var i in table.associations.belongsTo) {
+						var as = table.associations.belongsTo[i];
+						model += space+space+space+space+"models."+self.tableToCamelcase(tableName)+".belongsTo(models."+self.tableToCamelcase(as.foreignTable)+", { foreignKey: '"+self.fieldToCamelcase(as.foreignKey)+"' });"+lineBreak;
+					}
 					for(var i in table.associations.belongsToMany) {
 						var as = table.associations.belongsToMany[i];
 						model += space+space+space+space+"models."+self.tableToCamelcase(tableName)+".belongsToMany(models."+self.tableToCamelcase(as.foreignTable)+", {"+lineBreak;
@@ -179,15 +184,15 @@ Console.prototype = {
 		return tableName[0].toUpperCase()+tableName.substr(1);
 	},
 	
-	commandDbMigrate: function(dir, options, method) {
+	commandMigrate: function(dir, options, method) {
 		var self = this;
 		if(dir === undefined) {
-			dir = this.container.get('kernel').dir.app+'/migrations';
+			dir = this.container.get('kernel').dir.app+'/orm/migrations';
 		} else {
 			var dir = pa.resolve(dir);
 		}
 		if(fs.existsSync(dir) === false) {
-			fs.mkdirSync(dir);
+			mkdirp.sync(dir);
 		}
 		this.lanchSequelize(function() {
 			console.log('Run migration... (dir: '+dir+')');

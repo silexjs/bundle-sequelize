@@ -33,7 +33,6 @@ SequelizeService.prototype = {
 		this.create(config);
 		this.container.set('sequelize', this.sequelize);
 		this.container.set('orm', this.sequelize);
-		this.container.set('models', this.sequelize.models);
 		this.loadModels();
 		this.dispatcher.dispatch('sequelize.load_models', function() {
 			self.connection(config, function() {
@@ -82,9 +81,9 @@ SequelizeService.prototype = {
 	},
 	
 	loadModels: function() {
-		var dir = this.kernel.dir.app+'/models';
+		var dir = this.kernel.dir.app+'/orm/models';
 		if(fs.existsSync(dir) === true) {
-			var modelsFile = glob.sync(dir+'/*.js');
+			var modelsFile = glob.sync(dir+'/**/*.js');
 			var modelsFileLength = modelsFile.length;
 			for(var i=0; i<modelsFileLength; i++) {
 				this.sequelize.import(modelsFile[i]);

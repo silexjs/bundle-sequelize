@@ -78,6 +78,7 @@ Analyzer.prototype = {
 			var ts = db[tableName].associations = {
 				hasOne: [],
 				hasMany: [],
+				belongsTo: [],
 				belongsToMany: [],
 			};
 			var query  = 'SELECT TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME ';
@@ -97,16 +98,16 @@ Analyzer.prototype = {
 					if(asInfo !== null && (asInfo[1] === as.REFERENCED_TABLE_NAME || asInfo[3] === as.REFERENCED_TABLE_NAME)) {
 						if(asInfo[1] === as.REFERENCED_TABLE_NAME) {
 							var foreignTable = asInfo[3];
-							var otherKey = asInfo[1]+'_id';
+							var foreignKey = asInfo[1]+'_id';
 						} else {
 							var foreignTable = asInfo[1];
-							var otherKey = asInfo[3]+'_id';
+							var foreignKey = asInfo[3]+'_id';
 						}
 						ts.belongsToMany.push({
 							foreignTable: foreignTable,
 							through: as.TABLE_NAME,
-							foreignKey: foreignTable+'_id',
-							otherKey: otherKey,
+							foreignKey: foreignKey,
+							otherKey: foreignTable+'_id',
 						});
 					} else {
 						if(db[as.TABLE_NAME].fields.id === undefined
@@ -116,16 +117,20 @@ Analyzer.prototype = {
 								foreignTable: as.TABLE_NAME,
 								foreignKey: as.COLUMN_NAME,
 							});
+							db[as.TABLE_NAME].associations.hasOne.push({
+								foreignTable: as.REFERENCED_TABLE_NAME,
+								foreignKey: as.REFERENCED_COLUMN_NAME,
+							});
 						} else {
 							ts.hasMany.push({
 								foreignTable: as.TABLE_NAME,
 								foreignKey: as.COLUMN_NAME,
 							});
+							db[as.TABLE_NAME].associations.belongsTo.push({
+								foreignTable: as.REFERENCED_TABLE_NAME,
+								foreignKey: as.COLUMN_NAME,
+							});
 						}
-						db[as.TABLE_NAME].associations.hasOne.push({
-							foreignTable: as.REFERENCED_TABLE_NAME,
-							foreignKey: as.REFERENCED_COLUMN_NAME,
-						});
 					}
 				}
 				if(tablesNow >= tablesLength) {
