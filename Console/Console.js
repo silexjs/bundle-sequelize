@@ -1,6 +1,7 @@
 var pa = require('path');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
+var Umzug = require('Umzug');
 
 var Analyzer = USE('Silex.SequelizeBundle.Analyzer.Analyzer');
 
@@ -29,24 +30,31 @@ Console.prototype = {
 				self.commandGenerateModels.apply(self, arguments);
 			});
 		this.cmd
-			.command('sequelize:migrate [dir]')
+			.command('sequelize:migrate:status [dir]')
+			.description('Show list of migrations')
+			.action(function(dir) {
+				self.commandMigrateStatus.call(self, dir);
+			});
+		this.cmd
+			.command('sequelize:migrate:up [dir]')
 			.description('Runs migration files')
-			.action(function(dir, options) {
-				self.commandMigrate.call(self, dir, options, 'up');
+			.action(function(dir) {
+				self.commandMigrateUpDown.call(self, dir, 'up');
 			});
 		this.cmd
 			.command('sequelize:migrate:undo [dir]')
 			.description('Revert the last migration run')
-			.action(function() {
-				self.commandMigrate.call(self, dir, options, 'down');
+			.action(function(dir) {
+				self.commandMigrateUpDown.call(self, dir, 'down');
 			});
 	},
 	
-	lanchSequelize: function(cb) {
+	lanchSequelize: function(callback) {
 		var self = this;
+		console.log('Lanch Sequelize...');
 		this.sequelizeService.onKernelReady(function() {
 			self.sequelize = self.sequelizeService.sequelize;
-			cb();
+			callback(self.sequelize);
 		});
 	},
 	
@@ -85,14 +93,23 @@ Console.prototype = {
 					
 					for(var fieldName in table.fields) {
 						var field = table.fields[fieldName];
+						var fieldNameCamelcase = self.fieldToCamelcase(fieldName);
+						var defaultType = null;
 						var type = 'DataTypes.';
 						if(field.type.match(/^(smallint|mediumint|tinyint|int)$/i) !== null) {
+							defaultType = 0;
 							type += 'INTEGER';
+						} else if(field.type.match(/^(decimal|numeric)$/i) !== null) {
+							defaultType = 0.0;
+							type += 'DECIMAL';
 						} else if(field.type.match(/^(string|varchar|varying)$/i) !== null) {
+							defaultType = '';
 							type += 'STRING';
 						} else if(field.type.match(/^(date)$/i) !== null) {
+							defaultType = '00-00-00';
 							type += 'DATEONLY';
 						} else if(field.type.match(/^(datetime)$/i) !== null) {
+							defaultType = '00-00-00 00:00:00';
 							type += 'DATE';
 						} else {
 							type += field.type.toUpperCase();
@@ -107,12 +124,30 @@ Console.prototype = {
 						if(field.unsigned === true && field.type.match(/^(smallint|mediumint|tinyint|int|bigint)/) !== null) {
 							type += '.UNSIGNED';
 						}
-						model += space+space+self.fieldToCamelcase(fieldName)+": {"+lineBreak;
+						model += space+space+fieldNameCamelcase+": {"+lineBreak;
 						model += space+space+space+"field: '"+fieldName+"',"+lineBreak;
 						model += space+space+space+"type: "+type+","+lineBreak;
 						model += space+space+space+"primaryKey: "+field.primary+","+lineBreak;
-						model += space+space+space+"allowNull: "+field.null+","+lineBreak;
-						model += space+space+space+"defaultValue: "+field.default+","+lineBreak;
+						if(fieldName !== 'created_at'
+						&& fieldName !== 'updated_at'
+						&& fieldName !== 'deleted_at') {
+							model += space+space+space+"allowNull: "+field.null+","+lineBreak;
+							if(field.autoIncrement === false) {
+								if(field.null === false && field.default === null && defaultType !== null) {
+									model += space+space+space+"defaultValue: "+JSON.stringify(defaultType)+","+lineBreak;
+								} else if((field.null === false && field.default !== null) || field.null === true) {
+									var _default = field.default;
+									if(_default !== null) {
+										if(field.type.match(/^(smallint|mediumint|tinyint|int)$/i) !== null) {
+											_default = parseInt(_default);
+										} else if(field.type.match(/^(decimal|numeric)$/i) !== null) {
+											_default = parseFloat(_default);
+										}
+									}
+									model += space+space+space+"defaultValue: "+JSON.stringify(_default)+","+lineBreak;
+								}
+							}
+						}
 						model += space+space+space+"autoIncrement: "+field.autoIncrement+","+lineBreak;
 						if(field.comment !== '') {
 							model += space+space+space+"/* Comment:"+lineBreak;
@@ -184,7 +219,24 @@ Console.prototype = {
 		return tableName[0].toUpperCase()+tableName.substr(1);
 	},
 	
-	commandMigrate: function(dir, options, method) {
+	
+	lanchSequelizeUmzug: function(dir, callback) {
+		this.lanchSequelize(function(sequelize) {
+			var umzug = new Umzug({
+				storage: 'sequelize',
+				storageOptions: {
+					sequelize: sequelize,
+				},
+				migrations: {
+					params: [sequelize.getQueryInterface(), sequelize.constructor],
+					path: dir,
+				},
+				logging: console.log,
+			});
+			callback(umzug);
+		});
+	},
+	commandMigrateStatus: function(dir) {
 		var self = this;
 		if(dir === undefined) {
 			dir = this.container.get('kernel').dir.app+'/orm/migrations';
@@ -194,13 +246,70 @@ Console.prototype = {
 		if(fs.existsSync(dir) === false) {
 			mkdirp.sync(dir);
 		}
-		this.lanchSequelize(function() {
-			console.log('Run migration... (dir: '+dir+')');
-			self.sequelize.getMigrator({
-				path: dir,
-			}).migrate({ method: method }).success(function() {
-				console.log('The migration is finished');
-				self.end();
+		this.lanchSequelizeUmzug(dir, function(umzug) {
+			console.log('Load migration... (dir: '+dir+')');
+			umzug.executed().then(function(migrations) {
+				console.log('-------------------------------------------------------------------------------');
+				console.log('List already run migration: ('+migrations.length+')');
+				if(migrations.length-1 >= 0) {
+					for(var i in migrations) {
+						console.log(' - '+migrations[i].file);
+					}
+				} else {
+					console.log(' - No migration');
+				}
+				console.log('-------------------------------------------------------------------------------');
+				return umzug.pending().then(function(migrations) {
+					console.log('List of not yet run migration: ('+migrations.length+')');
+					if(migrations.length-1 >= 0) {
+						for(var i in migrations) {
+							console.log(' - '+migrations[i].file);
+						}
+					} else {
+						console.log(' - No migration');
+					}
+					console.log('-------------------------------------------------------------------------------');
+					self.end();
+				});
+			});
+		});
+	},
+	commandMigrateUpDown: function(dir, method) {
+		var self = this;
+		if(dir === undefined) {
+			dir = this.container.get('kernel').dir.app+'/orm/migrations';
+		} else {
+			var dir = pa.resolve(dir);
+		}
+		if(fs.existsSync(dir) === false) {
+			mkdirp.sync(dir);
+		}
+		this.lanchSequelizeUmzug(dir, function(umzug) {
+			umzug[(method==='up'?'pending':'executed')]().then(function(migrations) {
+				if(method === 'up') {
+					console.log('List of migration files to be executed: ('+migrations.length+')');
+					if(migrations.length-1 >= 0) {
+						for(var i in migrations) {
+							console.log(' - '+migrations[i].file);
+						} 
+					} else {
+						console.log(' - No migration');
+					}
+				} else {
+					console.log('Migration file to cancel ('+migrations.length+'):');
+					if(migrations.length-1 >= 0) {
+						console.log(' - '+migrations[migrations.length-1].file);
+					} else {
+						console.log(' - No migration');
+					}
+				}
+				console.log('Run migration');
+				console.log('-------------------------------------------------------------------------------');
+				return umzug[method]().then(function() {
+					console.log('-------------------------------------------------------------------------------');
+					console.log('The migration is finished');
+					self.end();
+				});
 			});
 		});
 	},
