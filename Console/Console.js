@@ -1,7 +1,7 @@
 var pa = require('path');
 var fs = require('fs');
 var mkdirp = require('mkdirp');
-var Umzug = require('Umzug');
+var Umzug = require('umzug');
 
 var Analyzer = USE('Silex.SequelizeBundle.Analyzer.Analyzer');
 
@@ -150,9 +150,10 @@ Console.prototype = {
 						}
 						model += space+space+space+"autoIncrement: "+field.autoIncrement+","+lineBreak;
 						if(field.comment !== '') {
-							model += space+space+space+"/* Comment:"+lineBreak;
-							model += space+space+space+space+field.comment.replace(/\n/g, lineBreak+space+space+space+space)+lineBreak;
-							model += space+space+space+"*/"+lineBreak;
+							model += space+space+space+"/**"+lineBreak;
+							model += space+space+space+" * Comment:"+lineBreak;
+							model += space+space+space+" * "+field.comment.replace(/\n/g, lineBreak+space+space+space+" * ")+lineBreak;
+							model += space+space+space+" */"+lineBreak;
 						}
 						model += space+space+"},"+lineBreak;
 					}

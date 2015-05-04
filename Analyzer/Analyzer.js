@@ -109,6 +109,10 @@ Analyzer.prototype = {
 							foreignKey: foreignKey,
 							otherKey: foreignTable+'_id',
 						});
+						ts.hasMany.push({
+							foreignTable: as.TABLE_NAME,
+							foreignKey: foreignKey,
+						});
 					} else {
 						if(db[as.TABLE_NAME].fields.id === undefined
 						&& db[as.TABLE_NAME].fields[tableName+'_id'] !== undefined
