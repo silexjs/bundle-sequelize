@@ -65,18 +65,17 @@ SequelizeService.prototype = {
 		var self = this;
 		this.sequelize
 			.authenticate()
-			.complete(function(err) {
-				if(err === null) {
-					if(self.debug === true) {
-						self.console('Database connection successful ('+config.host+':'+config.port+')');
-					}
-					callback();
-				} else {
-					if(self.debug === true) {
-						err += '\nConfiguration:\n'+JSON.stringify(config, null, '\t');
-					}
-					throw new Error(err);
+			.then(function() {
+				if(self.debug === true) {
+					self.console('Database connection successful ('+config.host+':'+config.port+')');
 				}
+				callback();
+			})
+			.catch(function(err) {
+				if(self.debug === true) {
+					err += '\nConfiguration:\n'+JSON.stringify(config, null, '\t');
+				}
+				throw new Error(err);
 			});
 	},
 	

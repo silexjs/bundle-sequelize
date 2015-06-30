@@ -89,51 +89,60 @@ Analyzer.prototype = {
 			self.sequelize.query(query).then(function(associations) {
 				associations = associations[0];
 				tablesNow++;
-				if(tableName.match(/^(.*)(_has_)(.*)$/i) !== null) {
-					return;
-				}
-				for(var i in associations) {
-					var as = associations[i];
-					var asInfo = as.TABLE_NAME.match(/^(.*)(_has_)(.*)$/i);
-					if(asInfo !== null && (asInfo[1] === as.REFERENCED_TABLE_NAME || asInfo[3] === as.REFERENCED_TABLE_NAME)) {
-						if(asInfo[1] === as.REFERENCED_TABLE_NAME) {
-							var foreignTable = asInfo[3];
-							var foreignKey = asInfo[1]+'_id';
-						} else {
-							var foreignTable = asInfo[1];
-							var foreignKey = asInfo[3]+'_id';
-						}
-						ts.belongsToMany.push({
-							foreignTable: foreignTable,
-							through: as.TABLE_NAME,
-							foreignKey: foreignKey,
-							otherKey: foreignTable+'_id',
-						});
-						ts.hasMany.push({
-							foreignTable: as.TABLE_NAME,
-							foreignKey: foreignKey,
-						});
-					} else {
-						if(db[as.TABLE_NAME].fields.id === undefined
-						&& db[as.TABLE_NAME].fields[tableName+'_id'] !== undefined
-						&& db[as.TABLE_NAME].fields[tableName+'_id'].primary === true) {
-							ts.hasOne.push({
-								foreignTable: as.TABLE_NAME,
-								foreignKey: as.COLUMN_NAME,
+				var tableNameInfo = tableName.match(/^(.*)(_has_)(.*)$/i)
+				if(tableNameInfo !== null) {
+					ts.belongsTo.push({
+						foreignTable: tableNameInfo[1],
+						foreignKey: tableNameInfo[1]+'_id',
+					});
+					ts.belongsTo.push({
+						foreignTable: tableNameInfo[3],
+						foreignKey: tableNameInfo[3]+'_id',
+					});
+				} else {
+					for(var i in associations) {
+						var as = associations[i];
+						var asInfo = as.TABLE_NAME.match(/^(.*)(_has_)(.*)$/i);
+						if(asInfo !== null && (asInfo[1] === as.REFERENCED_TABLE_NAME || asInfo[3] === as.REFERENCED_TABLE_NAME)) {
+							if(asInfo[1] === as.REFERENCED_TABLE_NAME) {
+								var foreignTable = asInfo[3];
+								var foreignKey = asInfo[1]+'_id';
+							} else {
+								var foreignTable = asInfo[1];
+								var foreignKey = asInfo[3]+'_id';
+							}
+							ts.belongsToMany.push({
+								foreignTable: foreignTable,
+								through: as.TABLE_NAME,
+								foreignKey: foreignKey,
+								otherKey: foreignTable+'_id',
 							});
-							db[as.TABLE_NAME].associations.hasOne.push({
-								foreignTable: as.REFERENCED_TABLE_NAME,
-								foreignKey: as.REFERENCED_COLUMN_NAME,
-							});
-						} else {
 							ts.hasMany.push({
 								foreignTable: as.TABLE_NAME,
-								foreignKey: as.COLUMN_NAME,
+								foreignKey: foreignKey,
 							});
-							db[as.TABLE_NAME].associations.belongsTo.push({
-								foreignTable: as.REFERENCED_TABLE_NAME,
-								foreignKey: as.COLUMN_NAME,
-							});
+						} else {
+							if(db[as.TABLE_NAME].fields.id === undefined
+							&& db[as.TABLE_NAME].fields[tableName+'_id'] !== undefined
+							&& db[as.TABLE_NAME].fields[tableName+'_id'].primary === true) {
+								ts.hasOne.push({
+									foreignTable: as.TABLE_NAME,
+									foreignKey: as.COLUMN_NAME,
+								});
+								db[as.TABLE_NAME].associations.hasOne.push({
+									foreignTable: as.REFERENCED_TABLE_NAME,
+									foreignKey: as.REFERENCED_COLUMN_NAME,
+								});
+							} else {
+								ts.hasMany.push({
+									foreignTable: as.TABLE_NAME,
+									foreignKey: as.COLUMN_NAME,
+								});
+								db[as.TABLE_NAME].associations.belongsTo.push({
+									foreignTable: as.REFERENCED_TABLE_NAME,
+									foreignKey: as.COLUMN_NAME,
+								});
+							}
 						}
 					}
 				}
