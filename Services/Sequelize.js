@@ -70,12 +70,6 @@ SequelizeService.prototype = {
 					self.console('Database connection successful ('+config.host+':'+config.port+')');
 				}
 				callback();
-			})
-			.catch(function(err) {
-				if(self.debug === true) {
-					err += '\nConfiguration:\n'+JSON.stringify(config, null, '\t');
-				}
-				throw new Error(err);
 			});
 	},
 	

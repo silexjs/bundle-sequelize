@@ -1,6 +1,6 @@
 {
 	"name": "silex-bundle-sequelize",
-	"version": "0.0.16",
+	"version": "0.0.17",
 	"description": "[SILEX][BUNDLE] Adds an ORM",
 	"author": "Valentin Allaire <valentin@sitexw.fr>",
 	"license": "MIT",
