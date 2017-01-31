@@ -111,6 +111,10 @@ Console.prototype = {
 						} else if(field.type.match(/^(datetime)$/i) !== null) {
 							defaultType = '00-00-00 00:00:00';
 							type += 'DATE';
+						} else if(field.type.match(/^(binary|varbinary)$/i) !== null) {
+							type += 'STRING';
+						} else if(field.type.match(/^(point|linestring|polygon)$/i) !== null) {
+							type += 'GEOMETRY';
 						} else {
 							type += field.type.toUpperCase();
 						}
@@ -123,6 +127,8 @@ Console.prototype = {
 						}
 						if(field.unsigned === true && field.type.match(/^(smallint|mediumint|tinyint|int|bigint)/) !== null) {
 							type += '.UNSIGNED';
+						} else if(field.type.match(/^(binary|varbinary)$/i) !== null) {
+							type += '.BINARY';
 						}
 						model += space+space+fieldNameCamelcase+": {"+lineBreak;
 						model += space+space+space+"field: '"+fieldName+"',"+lineBreak;

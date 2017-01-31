@@ -25,6 +25,9 @@ Analyzer.prototype = {
 							var f = db[table].fields[field.Field] = {};
 							
 							var typeInfo = field.Type.toLowerCase().match(/^([a-z]+)(\(([0-9]+)(,([0-9]+))?\))?(\s+(unsigned))?/i);
+							if(typeInfo[1] === 'enum') {
+								typeInfo[3] = field.Type.substr(5, field.Type.length-5-1);
+							}
 							f.type = typeInfo[1];
 							f.typeValue = [];
 							if(typeInfo[3] !== undefined) {
